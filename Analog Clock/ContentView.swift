@@ -1,29 +1,18 @@
 import SwiftUI
-import UserNotificationsUI
 
 struct ContentView: View {
-  @State var isDark: Bool = false
-  @State var is12h: Bool = false
+  @State private var currentTime = Time(sec: 0, min: 0, hour: 0)
+  @State private var is12h: Bool = false
+  @State private var isDark: Bool = false
+  @State private var receiver = Timer.publish(every: 1, on: .current, in: .default).autoconnect()
+  private var width = UIScreen.main.bounds.width
 
-  var body: some View {
-    Home(is12h: $is12h, isDark: $isDark)
-      .navigationBarHidden(true)
-      .preferredColorScheme(isDark ? .dark : .light)
+  private func time() -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = is12h ? "hh:mm a" : "HH:mm"
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    return formatter.string(from: Date())
   }
-}
-
-struct ContentView_Previews: PreviewProvider {
-  static var previews: some View {
-    ContentView()
-  }
-}
-
-struct Home: View {
-  @State var currentTime = Time(sec: 0, min: 0, hour: 0)
-  @State var receiver = Timer.publish(every: 1, on: .current, in: .default).autoconnect()
-  @Binding var is12h: Bool
-  @Binding var isDark: Bool
-  var width = UIScreen.main.bounds.width
 
   var body: some View {
     VStack {
@@ -36,7 +25,6 @@ struct Home: View {
 
         Button(action: {
           isDark.toggle()
-          vibrationFeedback()
         }, label: {
           Image(systemName: isDark ? "sun.min.fill" : "moon.fill")
             .font(.system(size: 22))
@@ -49,7 +37,7 @@ struct Home: View {
 
       Spacer()
 
-      Text(getTime())
+      Text(time())
         .font(.system(size: 45))
         .fontWeight(.heavy)
         .padding(.top, 10)
@@ -100,10 +88,14 @@ struct Home: View {
       }, label: {
         if is12h {
           Text("12h")
-            .modifier(FormatFomt())
+            .font(.system(size: 35))
+            .foregroundColor(.primary)
+            .cornerRadius(20)
         } else {
           Text("24h")
-            .modifier(FormatFomt())
+            .font(.system(size: 35))
+            .foregroundColor(.primary)
+            .cornerRadius(20)
         }
       })
 
@@ -129,28 +121,13 @@ struct Home: View {
         currentTime = Time(sec: sec, min: min, hour: hour)
       }
     }
-  }
-
-  func vibrationFeedback() {
-    UINotificationFeedbackGenerator().notificationOccurred(.success)
-  }
-
-  func getTime() -> String {
-    let format = DateFormatter()
-    if is12h {
-      format.dateFormat = "hh:mm a"
-    } else {
-      format.dateFormat = "HH:mm"
-    }
-    return format.string(from: Date())
+    .navigationBarHidden(true)
+    .preferredColorScheme(isDark ? .dark : .light)
   }
 }
 
-struct FormatFomt: ViewModifier {
-  func body(content: Content) -> some View {
-    content
-      .font(.system(size: 35))
-      .foregroundColor(.primary)
-      .cornerRadius(20)
+struct ContentView_Previews: PreviewProvider {
+  static var previews: some View {
+    ContentView()
   }
 }
